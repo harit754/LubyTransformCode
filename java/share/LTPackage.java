@@ -20,13 +20,14 @@ package share;
  */
 public class LTPackage {
 
-    private final static short DEFAULT_HEADER_SIZE = 18;
+    private final static short DEFAULT_HEADER_SIZE = 20;
     private final static short DEFAULT_BLOCK_SIZE = 80;
 
-    private final static short FILE_SIZE_OFFSET = 0;
-    private final static short BLOCK_SIZE_OFFSET = 8;
-    private final static short BLOCK_SEED_OFFSET = 10;
-    private final static short BLOCK_DATA_OFFSET = 18;
+    private final static short CRC_DATA_OFFSET = 0;
+    private final static short FILE_SIZE_OFFSET = 2;
+    private final static short BLOCK_SIZE_OFFSET = 10;
+    private final static short BLOCK_SEED_OFFSET = 12;
+    private final static short BLOCK_DATA_OFFSET = 20;
 
     private final long file_size;
     private final short block_size;
@@ -34,9 +35,9 @@ public class LTPackage {
     private final byte[] block_data;
 
     /*
-     *  | file size | block size | seed    | data |
-     *  |  8 bytes  |   2 bytes  | 8 bytes | 80 bytes |
-     *  |   long    |   short    |  long   | byte[] |
+     *  |   CRC 16  | file size | block size | seed    | data |
+     *  |   2 bytes |  8 bytes  |   2 bytes  | 8 bytes | 80 bytes |
+     *  |   short   |   long    |   short    |  long   | byte[] |
      *
      *
      */
@@ -120,7 +121,22 @@ public class LTPackage {
             System.arraycopy(bytes, 0, $, BLOCK_DATA_OFFSET, block_size);
         }
 
-        public final byte[] build() {
+        private void setCRC16() {
+            
+            byte[] package_bytes = new 
+                    byte[DEFAULT_HEADER_SIZE - FILE_SIZE_OFFSET];
+            
+            System.arraycopy($, FILE_SIZE_OFFSET, package_bytes, 0,
+                    package_bytes.length);
+            
+            int crc16 = CRC16.getCRC16(package_bytes);
+            
+            setNumberInByteArray($, crc16, CRC_DATA_OFFSET,
+                    FILE_SIZE_OFFSET - CRC_DATA_OFFSET);
+        }
+
+        private byte[] build() {
+            setCRC16();
             return $.clone();
         }
 
@@ -137,6 +153,11 @@ public class LTPackage {
     }
 
     public static class PackageRestore {
+
+        private static int getCRC16(byte[] bytes) {
+            return (int) getNumberInByteArray(bytes, CRC_DATA_OFFSET,
+                    FILE_SIZE_OFFSET - CRC_DATA_OFFSET);
+        }
 
         private static long getFileSize(byte[] bytes) {
             return getNumberInByteArray(bytes, FILE_SIZE_OFFSET,
@@ -162,7 +183,21 @@ public class LTPackage {
             return data.clone();
         }
 
+        private static boolean check(byte[] bytes, int size, int crc) {
+
+            byte[] package_bytes = new 
+                    byte[DEFAULT_HEADER_SIZE - FILE_SIZE_OFFSET];
+
+            System.arraycopy(bytes, FILE_SIZE_OFFSET, package_bytes, 0,
+                    package_bytes.length);
+
+            return CRC16.getCRC16(package_bytes) == crc;
+
+        }
+
         public static final LTPackage restore(byte[] bytes) {
+
+            int crc = getCRC16(bytes);
 
             long file_size = getFileSize(bytes);
 
@@ -171,6 +206,10 @@ public class LTPackage {
             long block_seed = getBlockSeed(bytes);
 
             byte[] block_data = getBlockData(bytes, block_size);
+
+            if (!check(bytes, block_size, crc)) {
+                return null;
+            }
 
             return new LTPackage(file_size, block_size, block_seed, block_data);
         }
@@ -197,24 +236,29 @@ public class LTPackage {
      */
     public static void main(String[] args) {
 
-            PackageBuilder builder = new PackageBuilder();
-            
-            builder.fileSize(542342);
-            builder.blockSize((short)2);
-            builder.blockSeed(41234);
-            builder.blockData(new byte[]{0x01, 0x02});
-            
-            byte[] pack = LTPackage.toBytes(builder);
-            
-            LTPackage pack_ = LTPackage.fromBytes(pack);
-            
-            System.out.println("file size: " + pack_.getFileSize());
-            System.out.println("block size:" + pack_.getBlockSize());
-            System.out.println("block seed:" + pack_.getBlockSeed());
-            byte[] data = pack_.getBlockData();
-            System.out.println("block data:");
-            for(byte b: data){
-                System.out.println("\t" + b);
-            }        
+        PackageBuilder builder = new PackageBuilder();
+
+        builder.fileSize(542342);
+        builder.blockSize((short) 2);
+        builder.blockSeed(41234);
+        builder.blockData(new byte[]{0x01, 0x02});
+
+        byte[] pack = LTPackage.toBytes(builder);
+
+        LTPackage pack_ = LTPackage.fromBytes(pack);
+
+        // check fails
+        if (null == pack_) {
+            return;
+        }
+
+        System.out.println("file size: " + pack_.getFileSize());
+        System.out.println("block size:" + pack_.getBlockSize());
+        System.out.println("block seed:" + pack_.getBlockSeed());
+        byte[] data = pack_.getBlockData();
+        System.out.println("block data:");
+        for (byte b : data) {
+            System.out.println("\t" + b);
+        }
     }
 }
