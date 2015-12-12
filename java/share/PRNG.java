@@ -9,58 +9,65 @@ package share;
  * @author smile
  */
 public class PRNG {
-    
-    private final static long PRNG_A = 16807;
-    private final static long PRNG_M = (1 << 31) - 1;
-    private final static long PRNG_MAX_RAND = PRNG_M - 1;
-    
+
+    private final static int PRNG_A = 16807;
+    private final static int PRNG_M = (1 << 31) - 1;
+    private final static int PRNG_MAX_RAND = PRNG_M - 1;
+
     private long state;
-    
+
     /**
      * @brief make the state a random number
      */
-    public PRNG(){
-        
-        //state = (long) (Math.random() * PRNG_MAX_RAND);
-        // make a fix value is good, if the user do not set the initialize value
+    public PRNG() {
+
         state = 2067261;
     }
-    
+
     /**
-     * 
+     *
      * @param seed state to set
      */
-    public final void setSeed(long seed){
-        state = seed;
+    public void setSeed(long seed) {
+        
+        this.state = seed;
     }
-    
+
     /**
-     * 
+     *
      * @return current state
      */
-    public final long getState(){
+    public long getState() {
+        
         return state;
     }
     
     /**
-     * 
+     *
      * @return random next integer number
      */
-    public final int nextInt(){
-        
+    public int nextInt() {
+
         state = state * PRNG_A % PRNG_M;
         return (int) state;
     }
-    
+
+    public double getProbability() {
+
+        // the probability 
+        return nextInt() / (PRNG_MAX_RAND * 1.0);
+    }
+
     /**
+     * @param args
      * @brief test the pseudo random number generation
      */
-    public static void main(String args[]){
-        
+    public static void main(String args[]) {
+
         PRNG prng = new PRNG();
-        
-        for(int i=0; i<10; i++)
+
+        for (int i = 0; i < 10; i++) {
             System.out.println(prng.nextInt());
-        
+        }
     }
 }

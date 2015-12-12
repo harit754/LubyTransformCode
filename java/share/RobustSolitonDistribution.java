@@ -148,8 +148,8 @@ public class RobustSolitonDistribution {
         
         ArrayList<Double> rsd = RobustSolitonDistribution.genRsd(k, delta, c);
         
-        for(double item : rsd){
+        rsd.stream().forEach((item) -> {
             System.out.println(item);
-        }
+        });
     }
 }

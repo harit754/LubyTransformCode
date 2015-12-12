@@ -20,14 +20,14 @@ package share;
  */
 public class LTPackage {
 
-    private final static short DEFAULT_HEADER_SIZE = 20;
-    private final static short DEFAULT_BLOCK_SIZE = 80;
+    public final static short DEFAULT_HEADER_SIZE = 20;
+    public final static short DEFAULT_BLOCK_SIZE = 80;
 
-    private final static short CRC_DATA_OFFSET = 0;
-    private final static short FILE_SIZE_OFFSET = 2;
-    private final static short BLOCK_SIZE_OFFSET = 10;
-    private final static short BLOCK_SEED_OFFSET = 12;
-    private final static short BLOCK_DATA_OFFSET = 20;
+    public final static short CRC_DATA_OFFSET = 0;
+    public final static short FILE_SIZE_OFFSET = 2;
+    public final static short BLOCK_SIZE_OFFSET = 10;
+    public final static short BLOCK_SEED_OFFSET = 12;
+    public final static short BLOCK_DATA_OFFSET = 20;
 
     private final long file_size;
     private final short block_size;
@@ -121,16 +121,24 @@ public class LTPackage {
             System.arraycopy(bytes, 0, $, BLOCK_DATA_OFFSET, block_size);
         }
 
+        public void showInformation() {
+
+            System.err.println("file size: " + file_size);
+            System.err.println("block size: " + block_size);
+            System.err.println("block seed: " + block_seed);
+
+        }
+
         private void setCRC16() {
-            
-            byte[] package_bytes = new 
-                    byte[DEFAULT_HEADER_SIZE - FILE_SIZE_OFFSET];
-            
+
+            byte[] package_bytes
+                    = new byte[DEFAULT_HEADER_SIZE - FILE_SIZE_OFFSET];
+
             System.arraycopy($, FILE_SIZE_OFFSET, package_bytes, 0,
                     package_bytes.length);
-            
+
             int crc16 = CRC16.getCRC16(package_bytes);
-            
+
             setNumberInByteArray($, crc16, CRC_DATA_OFFSET,
                     FILE_SIZE_OFFSET - CRC_DATA_OFFSET);
         }
@@ -180,13 +188,12 @@ public class LTPackage {
 
             System.arraycopy(bytes, BLOCK_DATA_OFFSET, data, 0, len);
 
-            return data.clone();
+            return data;
         }
 
         private static boolean check(byte[] bytes, int size, int crc) {
 
-            byte[] package_bytes = new 
-                    byte[DEFAULT_HEADER_SIZE - FILE_SIZE_OFFSET];
+            byte[] package_bytes = new byte[DEFAULT_HEADER_SIZE - FILE_SIZE_OFFSET];
 
             System.arraycopy(bytes, FILE_SIZE_OFFSET, package_bytes, 0,
                     package_bytes.length);
