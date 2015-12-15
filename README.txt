@@ -37,7 +37,7 @@ Development
     The project current contains two version of the LT Code:
 
         1. python3 version, this version can work correctly.
-        2. java8 version, this version also work well now.
+        2. java8 and java6 version, this version also work well now.
 
 Example
 -------
