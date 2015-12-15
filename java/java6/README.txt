@@ -10,3 +10,6 @@ version, this work ok.
 
 for more detail about this version, just refer to the readme
 file in java8 directory.
+
+if you can use java8 api, I suggest you use high level version
+because of high performance it gains.
